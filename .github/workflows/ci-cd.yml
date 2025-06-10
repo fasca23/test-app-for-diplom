@@ -83,8 +83,7 @@ jobs:
 
       - name: Generate deployment.yaml from template
         run: |
-          export $(cat .version | xargs)   # загружаем APP_VERSION из файла
-          echo "APP_VERSION = $APP_VERSION"        
+        
           envsubst < k8s/deployment.template.yaml > k8s/deployment.yaml
 
       - name: Show generated deployment.yaml
