@@ -78,7 +78,7 @@ jobs:
 
       - name: Generate deployment.yaml
         run: |
-          envsubst < k8s/deployment.template.yaml > k8s/deployment.yaml
+          envsubst < k8s/deployment.yaml > k8s/deployment.yaml
 
       - name: Show current directory content
         run: |
