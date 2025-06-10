@@ -81,10 +81,14 @@ jobs:
         id: vars
         run: echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
 
-      - name: Generate deployment.yaml
+      - name: Generate deployment.yaml from template
         run: |
-          envsubst < k8s/deployment.yaml > k8s/deployment.yaml
+          envsubst < k8s/deployment.template.yaml > k8s/deployment.yaml
 
+      - name: Show generated deployment.yaml
+        run: |
+          cat k8s/deployment.yaml
+          
       - name: Show current directory content
         run: |
           echo "Содержимое текущей директории:"
