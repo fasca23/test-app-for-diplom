@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: test-app
-          image: fasca22/test-app:latest
+          image: fasca22/test-app:${APP_VERSION}
           ports:
             - containerPort: 5000
