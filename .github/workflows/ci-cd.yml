@@ -59,7 +59,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ github.ref_name }}  # например, v1.0.0
+            ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 
       - name: Install kubectl
         run: |
@@ -79,6 +79,32 @@ jobs:
       - name: Generate deployment.yaml
         run: |
           envsubst < k8s/deployment.template.yaml > k8s/deployment.yaml
+
+      - name: Show current directory content
+        run: |
+          echo "Содержимое текущей директории:"
+          ls -la
+
+      - name: Show k8s/ directory content
+        run: |
+          echo "Содержимое k8s/:"
+          ls -la k8s/
+
+      - name: Show generated deployment.yaml
+        run: |
+          echo "Содержимое k8s/deployment.yaml:"
+          cat k8s/deployment.yaml
+
+      - name: Check kubectl version & config
+        run: |
+          echo "kubectl version:"
+          kubectl version --client
+
+          echo -e "\nТекущая конфигурация kubectl:"
+          kubectl config view
+
+          echo -e "\nПолучение списка неймспейсов (проверка подключения):"
+          kubectl get namespaces --request-timeout=15s
 
       - name: Apply manifests
         run: |
