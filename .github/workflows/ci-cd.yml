@@ -1,11 +1,11 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (Git Tag Only for Production)
 
 on:
   push:
     branches:
-      - master  # любые коммиты в master → сборка и пуш dev-образа
+      - master  # сборка dev-образа при пуше в master
     tags:
-      - 'v*'    # при создании тега вида v1.0.0 → full deploy
+      - 'v*'    # full deploy только по Git Tag
 
 env:
   REGISTRY: docker.io
@@ -44,23 +44,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Load version from .version file
+      - name: Set version from Git tag
         run: |
-          FILE_PATH="$GITHUB_WORKSPACE/.version"
+          APP_VERSION=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
-          if [ -f "$FILE_PATH" ]; then
-            export $(cat "$FILE_PATH" | xargs)
-            echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-          else
-            echo "❌ Файл .version не найден по пути: $FILE_PATH"
-            ls -la "$GITHUB_WORKSPACE"
-            exit 1
-          fi
-
-      - name: Set environment variables for manifest generation
+      - name: Set environment variables
         run: |
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -78,3 +69,28 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl  -LSs https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" 
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Setup kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" > ~/.kube/config
+
+      - name: Generate deployment.yaml from template
+        run: |
+          export IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/test-app
+          export APP_VERSION=${{ env.APP_VERSION }}
+          envsubst < k8s/deployment.template.yaml > k8s/deployment.yaml
+
+      - name: Show generated deployment.yaml
+        run: |
+          cat k8s/deployment.yaml
+
+      - name: Apply manifests
+        run: |
+          kubectl apply -f k8s/
