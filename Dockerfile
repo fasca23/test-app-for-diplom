@@ -9,4 +9,7 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+ARG APP_VERSION
+LABEL version=$APP_VERSION
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--env", "APP_VERSION=$APP_VERSION", "app:app"]
