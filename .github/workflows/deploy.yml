@@ -26,7 +26,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/flask-kamenev:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/test-app:latest
 
       # 4. Установка kubectl
       - name: Install kubectl
