@@ -41,31 +41,35 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - name: Load version from .version file
-        run: |
-          # Читаем .version файл
-          if [ -f .version ]; then
-            export $(cat .version | xargs)
-          else
-            echo "❌ Файл .version не найден"
-            exit 1
-          fi
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Load version from .version file
+        run: |
+          FILE_PATH="$GITHUB_WORKSPACE/.version"
+
+          if [ -f "$FILE_PATH" ]; then
+            export $(cat "$FILE_PATH" | xargs)
+            echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          else
+            echo "❌ Файл .version не найден по пути: $FILE_PATH"
+            ls -la "$GITHUB_WORKSPACE"
+            exit 1
+          fi
+
       - name: Set environment variables for manifest generation
         run: |
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
           echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
-      - name: Set explicit env for Docker build
-        run: |
-          export IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/test-app
-          export APP_VERSION=${{ github.ref_name }}
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push tagged image
         uses: docker/build-push-action@v5
@@ -73,5 +77,4 @@ jobs:
           context: .
           push: true
           tags: |
-          
             ${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}
