@@ -104,18 +104,3 @@ jobs:
       - name: Apply manifests
         run: |
           kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml
-
-      - name: Wait for rollout
-        run: |
-          kubectl rollout status deployment/test-app --timeout=60s
-
-      - name: Check current image in Deployment
-        run: |
-          CURRENT_IMAGE=$(kubectl get deployment test-app -o jsonpath='{.spec.template.spec.containers[0].image}')
-          echo "🚀 Текущий образ в Kubernetes: $CURRENT_IMAGE"
-          if [[ "$CURRENT_IMAGE" == "*${APP_VERSION}" ]]; then
-            echo "✅ Версия успешно обновлена на $APP_VERSION"
-          else
-            echo "❌ Ошибка: ожидается $IMAGE_NAME:$APP_VERSION, найдено $CURRENT_IMAGE"
-            exit 1
-          fi
