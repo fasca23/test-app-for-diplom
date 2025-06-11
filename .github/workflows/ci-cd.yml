@@ -68,8 +68,15 @@ jobs:
         run: |
           export APP_VERSION=${{ env.APP_VERSION }}
           export IMAGE_NAME=${{ env.IMAGE_NAME }}
-          envsubst '${IMAGE_NAME} ${APP_VERSION}' < k8s/deployment.template.yaml > k8s/deployment.yaml
 
+          echo "APP_VERSION = $APP_VERSION"
+          echo "IMAGE_NAME = $IMAGE_NAME"
+          which envsubst || echo "envsubst not found"
+
+          envsubst '${APP_VERSION} ${IMAGE_NAME}' < k8s/deployment.template.yaml > k8s/deployment.yaml
+
+          cat k8s/deployment.yaml
+          
       - name: Show generated deployment.yaml
         run: |
           echo "Содержимое k8s/deployment.yaml:"
@@ -85,6 +92,14 @@ jobs:
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG_DATA }}" > ~/.kube/config
+
+      - name: Validate YAML after substitution
+        run: |
+          if grep -q '\${APP_VERSION}' k8s/deployment.yaml; then
+            echo "❌ Переменная APP_VERSION не заменена!"
+            exit 1
+          fi
+          echo "✅ Все переменные заменены корректно"   
 
       - name: Apply manifests
         run: |
