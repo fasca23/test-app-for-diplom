@@ -12,6 +12,8 @@ spec:
       labels:
         app: test-app
         version: ${APP_VERSION}
+      annotations:
+        kubernetes.io/change-cause: ${APP_VERSION}
     spec:
       containers:
         - name: test-app
