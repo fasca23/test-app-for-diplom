@@ -41,4 +41,4 @@ git tag -a "$VERSION" -m "$MESSAGE"
 # Пушим тег
 git push origin "$VERSION"
 
-echo "✅ Релис $VERSION успешно опубликован!"
+echo "✅ Релиз $VERSION успешно опубликован!"
